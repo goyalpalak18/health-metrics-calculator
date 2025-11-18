@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# node (if you use tools later)
+node_modules/
+dist/
+build/
+
+# environment
+.env
+
+# editor settings
+.vscode/
+*.log
