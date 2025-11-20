@@ -3,25 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Health Metrics</title>
+
+    <!-- Added Inter font (you referenced it in CSS) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-   <header class="site-header">
-    <div class="container header-inner">
-        <div class="logo">Health Metrics</div>
-        <nav class="nav">
-            <a href="#">About</a>
-            <a href="#">Contact</a>
-        </nav>
-    </div>
-   </header>
-   <main class="container main">
-    <section class="hero card">
-        <h1>Track your health instantly</h1>
-        <p class="lead">Calculate BMI, BMR and see risk band - simple and fast.</p>
-        <a href="#calculator" class="btn primary">Start now</a>
-    </section>
-   </main>
+
+    <!-- SKIP LINK for keyboard users -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <header class="site-header" role="banner">
+        <div class="container header-inner">
+            
+            <!-- Logo should be a link for accessibility -->
+            <a href="/" class="logo" aria-label="Health Metrics Home">Health Metrics</a>
+
+            <!-- Semantic nav with list -->
+            <nav class="nav" aria-label="Main Navigation">
+                <ul class="nav-list">
+                    <li><a href="#about" tabindex="0">About</a></li>
+                    <li><a href="#contact" tabindex="0">Contact</a></li>
+                </ul>
+            </nav>
+
+        </div>
+    </header>
+
+    <main class="container main" id="main" role="main" tabindex="-1">
+
+        <section class="hero card" aria-labelledby="hero-title">
+            <h1 id="hero-title">Track your health instantly</h1>
+            <p class="lead">Calculate BMI, BMR and see health risk bands – simple and fast.</p>
+            <a href="#calculator" class="btn primary" role="button">Start now</a>
+        </section>
+
+    </main>
+
 </body>
 </html>
