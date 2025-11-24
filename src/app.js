@@ -4,7 +4,7 @@ import { calculateBMR } from './modules/bmr.js';
 import { getRiskBand } from './modules/riskBands.js';
 import { saveEntry, getHistory, undoLast } from './modules/storage.js';
 
-// DOM references (must match your HTML ids)
+// DOM references 
 const form = document.getElementById('healthForm');
 const heightEl = document.getElementById('height');
 const weightEl = document.getElementById('weight');
@@ -16,7 +16,7 @@ const bmiEl = document.getElementById('bmiResult');
 const bmrEl = document.getElementById('bmrResult');
 const riskEl = document.getElementById('riskBand');
 
-// history list id — if not present, the script will create one
+// history list id 
 let historyList = document.getElementById('history-list');
 
 function ensureHistoryContainer() {
@@ -42,7 +42,7 @@ function renderResults(bmi, bmr, band) {
   bmrEl.textContent = bmr ? bmr : '—';
   riskEl.textContent = band ? band.advice : '—';
 
-  // add color class to results box for visual band (optional)
+  // add color class to results box for visual band 
   resultsBox.classList.remove('band-good','band-warning','band-bad');
   if (band && band.className) resultsBox.classList.add(band.className);
 }
@@ -63,7 +63,7 @@ function renderHistory() {
   }
 }
 
-// read inputs (basic)
+// read inputs 
 function readInputs() {
   const height = Number(heightEl.value);
   const weight = Number(weightEl.value);
