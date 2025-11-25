@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Health Metrics</title>
 
-    <!-- Added Inter font (you referenced it in CSS) -->
+    <!-- Added Inter font (referenced in CSS) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="./style.css">
@@ -14,16 +14,17 @@
 
 <body>
 
-    <!-- SKIP LINK for keyboard users -->
+    <!-- SKIP LINK for keyboard users (accessibility) -->
     <a href="#main" class="skip-link">Skip to main content</a>
 
+    <!-- ---------------- HEADER SECTION ---------------- -->
     <header class="site-header" role="banner">
         <div class="container header-inner">
 
-            <!-- Logo should be a link for accessibility -->
+            <!-- Logo linked to home (important for accessibility) -->
             <a href="/" class="logo" aria-label="Health Metrics Home">Health Metrics</a>
 
-            <!-- Semantic nav with list -->
+            <!-- Main Navigation -->
             <nav class="nav" aria-label="Main Navigation">
                 <ul class="nav-list">
                     <li><a href="#about" tabindex="0">About</a></li>
@@ -34,33 +35,42 @@
         </div>
     </header>
 
+    <!-- ---------------- MAIN CONTENT WRAPPER ---------------- -->
     <main class="container main" id="main" role="main" tabindex="-1">
 
+        <!-- HERO SECTION (landing intro) -->
         <section class="hero card" aria-labelledby="hero-title">
             <h1 id="hero-title">Track your health instantly</h1>
             <p class="lead">Calculate BMI, BMR and see health risk bands – simple and fast.</p>
             <a href="#calculator" class="btn primary" role="button">Start now</a>
         </section>
+
+        <!-- ---------------- CALCULATOR SECTION ---------------- -->
         <section id="calculator" class="calculator container card">
             <h2>Health Metrics Calculator</h2>
 
+            <!-- Form for user inputs -->
             <form id="healthForm">
 
+                <!-- Height Input -->
                 <div class="form-group">
                     <label for="height">Height (cm)</label>
                     <input type="number" id="height" required>
                 </div>
 
+                <!-- Weight Input -->
                 <div class="form-group">
                     <label for="weight">Weight (kg)</label>
                     <input type="number" id="weight" required>
                 </div>
 
+                <!-- Age Input -->
                 <div class="form-group">
                     <label for="age">Age</label>
                     <input type="number" id="age" required>
                 </div>
 
+                <!-- Gender Input -->
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <select id="gender" required>
@@ -70,9 +80,11 @@
                     </select>
                 </div>
 
+                <!-- Submit Button -->
                 <button type="submit" class="btn primary">Calculate</button>
             </form>
 
+            <!-- Results Display Box -->
             <div id="results" class="results hidden">
                 <h3>Your Results</h3>
                 <p><strong>BMI:</strong> <span id="bmiResult"></span></p>
@@ -81,6 +93,8 @@
             </div>
         </section>
     </main>
+
+    <!-- Main app logic -->
     <script type="module" src="./app.js"></script>
 
 </body>
