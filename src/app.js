@@ -1,24 +1,27 @@
 // src/app.js
+
 import { calculateBMI, getBMICategory } from './modules/bmi.js';
 import { calculateBMR } from './modules/bmr.js';
 import { getRiskBand } from './modules/riskBands.js';
 import { saveEntry, getHistory, undoLast } from './modules/storage.js';
 
-// DOM references 
+// basic form + input refs
 const form = document.getElementById('healthForm');
 const heightEl = document.getElementById('height');
 const weightEl = document.getElementById('weight');
 const ageEl = document.getElementById('age');
 const genderEl = document.getElementById('gender');
 
+// result box + spans
 const resultsBox = document.getElementById('results');
 const bmiEl = document.getElementById('bmiResult');
 const bmrEl = document.getElementById('bmrResult');
 const riskEl = document.getElementById('riskBand');
 
-// history list id 
+// history container (added later if missing)
 let historyList = document.getElementById('history-list');
 
+// make sure history section exists
 function ensureHistoryContainer() {
   if (historyList) return;
   const sec = document.createElement('section');
@@ -29,33 +32,36 @@ function ensureHistoryContainer() {
   historyList = document.getElementById('history-list');
 }
 
-// render results to UI
+// show results in UI
 function renderResults(bmi, bmr, band) {
   if (!resultsBox) return;
+
   if (bmi === null) {
     resultsBox.classList.add('hidden');
     return;
   }
-  resultsBox.classList.remove('hidden');
 
+  resultsBox.classList.remove('hidden');
   bmiEl.textContent = bmi ? bmi.toFixed(1) : '—';
   bmrEl.textContent = bmr ? bmr : '—';
   riskEl.textContent = band ? band.advice : '—';
 
-  // add color class to results box for visual band 
+  // risk band color
   resultsBox.classList.remove('band-good','band-warning','band-bad');
   if (band && band.className) resultsBox.classList.add(band.className);
 }
 
-// render saved history
+// load + show saved history
 function renderHistory() {
   ensureHistoryContainer();
   const items = getHistory();
   historyList.innerHTML = '';
+
   if (!items || !items.length) {
     historyList.innerHTML = '<li>No previous calculations</li>';
     return;
   }
+
   for (const item of items) {
     const li = document.createElement('li');
     li.textContent = `${item.date} — BMI ${item.bmi.toFixed(1)}, BMR ${item.bmr || '—'}`;
@@ -63,29 +69,37 @@ function renderHistory() {
   }
 }
 
-// read inputs 
+// read inputs from form
 function readInputs() {
   const height = Number(heightEl.value);
   const weight = Number(weightEl.value);
   const age = Number(ageEl.value);
   const gender = genderEl.value;
+
   if (!height || !weight) return null;
+
   return { height, weight, age: age || null, gender };
 }
 
-// main compute + render + save
+// calculate + update UI + save history
 function computeAndRender() {
   const values = readInputs();
+
   if (!values) {
     renderResults(null, null, null);
     return;
   }
+
   const bmi = calculateBMI(values.weight, values.height);
-  const bmr = (values.age && values.gender) ? calculateBMR({ weightKg: values.weight, heightCm: values.height, age: values.age, gender: values.gender }) : null;
+  const bmr = (values.age && values.gender)
+    ? calculateBMR({ weightKg: values.weight, heightCm: values.height, age: values.age, gender: values.gender })
+    : null;
+
   const band = getRiskBand(bmi);
 
   renderResults(bmi, bmr, band);
 
+  // prepare saved entry
   const entry = {
     date: new Date().toLocaleString(),
     height: values.height,
@@ -95,41 +109,50 @@ function computeAndRender() {
     bmi,
     bmr
   };
+
   saveEntry(entry);
   renderHistory();
 }
 
-// debounce helper to avoid too-frequent updates while typing
+// debounce so results don’t spam while typing
 function debounce(fn, ms = 300) {
   let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
 }
 
 const debouncedCompute = debounce(computeAndRender, 300);
 
-// events wiring
+// handle form events
 if (form) {
   form.addEventListener('input', (e) => {
-    // update when the form fields change
     if (['height','weight','age','gender'].includes(e.target.id)) debouncedCompute();
   });
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     computeAndRender();
   });
 }
 
-// undo button (if you want to add an undo button with id="undo-btn")
+// undo last history item (if button exists)
 document.addEventListener('click', (e) => {
   if (!e.target) return;
+
   if (e.target.id === 'undo-btn') {
     undoLast();
     renderHistory();
     const last = getHistory()[0];
-    if (last) renderResults(last.bmi, last.bmr, getRiskBand(last.bmi));
-    else renderResults(null, null, null);
+
+    if (last) {
+      renderResults(last.bmi, last.bmr, getRiskBand(last.bmi));
+    } else {
+      renderResults(null, null, null);
+    }
   }
 });
 
-// init
+// initial load
 renderHistory();
