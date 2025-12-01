@@ -16,3 +16,4 @@ export function getBMICategory(bmi) {
   if (bmi < 30) return { label: 'Overweight', level: 'warning' };
   return { label: 'Obese', level: 'bad' };
 }
+

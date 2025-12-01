@@ -233,3 +233,40 @@ form {
 .hidden {
   display: none;
 }
+
+
+/* Added spacing for new calculator sections */
+#bmi-calculator,
+#bmr-calculator {
+  margin-top: 2rem;
+}
+
+.history {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.history h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+#history-list {
+  list-style: none;
+  padding-left: 0;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+#history-list li {
+  padding: 0.6rem 0.4rem;
+  border-bottom: 1px solid #eee;
+}
+
+#history-list li:last-child {
+  border-bottom: none;
+}
