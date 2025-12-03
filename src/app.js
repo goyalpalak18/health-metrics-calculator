@@ -63,6 +63,7 @@ function onBMISubmit(e) {
 
   text(els.bmiValue, bmi.toFixed(1));
   updateRiskBand(getRiskBand(bmi));
+  drawBMIChart(bmi); // draw the small colored BMI band
 
   show(els.bmiError, false);
   show(els.bmiOutput, true);
@@ -128,6 +129,39 @@ function updateRiskBand(band) {
   els.bmiRisk.className = 'risk-band';
   if (band.category) els.bmiRisk.classList.add(band.category);
   text(els.bmiRisk, `${band.label} – ${band.advice}`);
+}
+
+function drawBMIChart(bmi) {
+  const canvas = document.getElementById('bmiChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = 300;
+  canvas.height = 40;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const segments = [
+    { max: 18.5, color: '#60a5fa' },
+    { max: 24.9, color: '#34d399' },
+    { max: 29.9, color: '#fbbf24' },
+    { max: 40,   color: '#f87171' }
+  ];
+
+  let x = 0;
+  const segWidth = canvas.width / 4;
+
+  segments.forEach(seg => {
+    ctx.fillStyle = seg.color;
+    ctx.fillRect(x, 0, segWidth, 40);
+    x += segWidth;
+  });
+
+  if (bmi > 0) {
+    const markerX = Math.min((bmi / 40) * canvas.width, canvas.width - 2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(markerX, 0, 3, 40);
+  }
 }
 
 /* ---------- HISTORY (localStorage + table) ---------- */
