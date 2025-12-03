@@ -1,140 +1,194 @@
-// ...existing code...
-/* app.js — split BMI and BMR calculators; keep storage + debounce */
-
+// src/app.js
 import { calculateBMI } from './modules/bmi.js';
 import { calculateBMR } from './modules/bmr.js';
 import { getRiskBand } from './modules/riskBands.js';
-import * as storage from './modules/storage.js';
 
-function debounce(fn, wait = 250) {
-  let t = null;
-  return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), wait);
-  };
-}
+const $ = id => document.getElementById(id);
 
-/* -- BMI logic -- */
-function readBMIForm() {
-  const height = parseFloat(document.getElementById('bmi-height').value) || 0;
-  const weight = parseFloat(document.getElementById('bmi-weight').value) || 0;
-  return { height, weight };
-}
+const els = {
+  bmiForm: $('bmiForm'),
+  bmrForm: $('bmrForm'),
 
-function renderBMI({ bmi, band }) {
-  const wrapper = document.getElementById('bmi-results');
-  const bmiVal = document.getElementById('bmiValue');
-  const bmiRisk = document.getElementById('bmiRisk');
-  if (!wrapper || !bmiVal || !bmiRisk) return;
-  bmiVal.textContent = bmi ? bmi : '-';
-  bmiRisk.textContent = band?.band ? `${band.band} — ${band.advice || ''}` : '-';
-  wrapper.classList.remove('hidden');
-}
+  bmiHeight: $('bmi-height'),
+  bmiWeight: $('bmi-weight'),
+  bmiResults: $('bmi-results'),
+  bmiError: $('bmi-error'),
+  bmiOutput: $('bmi-output'),
+  bmiValue: $('bmiValue'),
+  bmiRisk: $('bmi-risk-band'),
 
-/* -- BMR logic -- */
-function readBMRForm() {
-  const height = parseFloat(document.getElementById('bmr-height').value) || 0;
-  const weight = parseFloat(document.getElementById('bmr-weight').value) || 0;
-  const age = parseInt(document.getElementById('bmr-age').value, 10) || 0;
-  const gender = document.getElementById('bmr-gender').value || '';
-  return { height, weight, age, sex: gender };
-}
+  bmrHeight: $('bmr-height'),
+  bmrWeight: $('bmr-weight'),
+  bmrAge: $('bmr-age'),
+  bmrGender: $('bmr-gender'),
+  bmrResults: $('bmr-results'),
+  bmrError: $('bmr-error'),
+  bmrOutput: $('bmr-output'),
+  bmrValue: $('bmrValue'),
 
-function renderBMR({ bmr }) {
-  const wrapper = document.getElementById('bmr-results');
-  const bmrVal = document.getElementById('bmrValue');
-  if (!wrapper || !bmrVal) return;
-  bmrVal.textContent = bmr ? bmr : '-';
-  wrapper.classList.remove('hidden');
-}
+  historyBody: $('history-body')
+};
 
-/* -- Handlers -- */
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  if (!list) return;
+const HISTORY_KEY = 'health-metrics-history';
+let history = [];
 
-  const data = storage.getAllRecords ? storage.getAllRecords() : storage.getHistory?.() || [];
+const num = el => parseFloat(el.value);
+const isValid = v => typeof v === 'number' && v > 0 && Number.isFinite(v);
+const show = (el, on = true) => el && el.classList[on ? 'remove' : 'add']('hidden');
+const text = (el, t) => el && (el.textContent = t || '');
 
-  list.innerHTML = '';
+if (els.bmiForm) els.bmiForm.addEventListener('submit', onBMISubmit);
+if (els.bmrForm) els.bmrForm.addEventListener('submit', onBMRSubmit);
 
-  if (!data.length) {
-    list.innerHTML = '<li>No history available.</li>';
+function onBMISubmit(e) {
+  e.preventDefault();
+
+  const h = num(els.bmiHeight);
+  const w = num(els.bmiWeight);
+
+  if (!isValid(h) || !isValid(w)) {
+    showError(els.bmiError, 'Please enter valid height and weight (greater than 0).');
+    show(els.bmiOutput, false);
+    show(els.bmiResults, true);
     return;
   }
 
-  data.forEach(item => {
-    const li = document.createElement('li');
-    if (item.type === 'bmi') {
-      li.textContent = `BMI: ${item.bmi.toFixed(1)} (H: ${item.height}cm, W: ${item.weight}kg)`;
-    } else if (item.type === 'bmr') {
-      li.textContent = `BMR: ${item.bmr} (H: ${item.height}cm, W: ${item.weight}kg, Age: ${item.age}, ${item.sex})`;
-    }
-    list.appendChild(li);
+  const bmi = calculateBMI(h, w);
+  if (!Number.isFinite(bmi)) {
+    showError(els.bmiError, 'Unable to calculate BMI. Please check your values.');
+    show(els.bmiOutput, false);
+    show(els.bmiResults, true);
+    return;
+  }
+
+  text(els.bmiValue, bmi.toFixed(1));
+  updateRiskBand(getRiskBand(bmi));
+
+  show(els.bmiError, false);
+  show(els.bmiOutput, true);
+  show(els.bmiResults, true);
+
+  addHistory({
+    type: 'BMI',
+    time: now(),
+    height: h.toFixed(1),
+    weight: w.toFixed(1),
+    bmi: Number(bmi.toFixed(1)),
+    bmr: null
   });
 }
-const handleBMISubmit = (evt) => {
-  evt.preventDefault();
-  const { height, weight } = readBMIForm();
-  const bmi = calculateBMI(height, weight);
-  const band = getRiskBand(bmi);
-  renderBMI({ bmi, band });
-  renderHistory();
 
-  // optional: save BMI history (non-destructive)
+function onBMRSubmit(e) {
+  e.preventDefault();
+
+  const h = num(els.bmrHeight);
+  const w = num(els.bmrWeight);
+  const age = num(els.bmrAge);
+  const gender = (els.bmrGender.value || '').toLowerCase();
+
+  if (!isValid(h) || !isValid(w) || !isValid(age) || !gender) {
+    showError(els.bmrError, 'Please enter valid values for all fields.');
+    show(els.bmrOutput, false);
+    show(els.bmrResults, true);
+    return;
+  }
+
+  const bmr = calculateBMR(h, w, age, gender);
+  if (!Number.isFinite(bmr)) {
+    showError(els.bmrError, 'Unable to calculate BMR. Please check your values.');
+    show(els.bmrOutput, false);
+    show(els.bmrResults, true);
+    return;
+  }
+
+  text(els.bmrValue, Math.round(bmr));
+
+  show(els.bmrError, false);
+  show(els.bmrOutput, true);
+  show(els.bmrResults, true);
+
+  addHistory({
+    type: 'BMR',
+    time: now(),
+    height: h.toFixed(1),
+    weight: w.toFixed(1),
+    bmi: null,
+    bmr: Math.round(bmr)
+  });
+}
+
+function showError(el, msg) {
+  if (!el) return;
+  text(el, msg);
+  show(el, true);
+}
+
+function updateRiskBand(band) {
+  if (!els.bmiRisk || !band) return;
+  els.bmiRisk.className = 'risk-band';
+  if (band.category) els.bmiRisk.classList.add(band.category);
+  text(els.bmiRisk, `${band.label} – ${band.advice}`);
+}
+
+/* ---------- HISTORY (localStorage + table) ---------- */
+
+function now() {
+  return new Date().toLocaleString();
+}
+
+function loadHistory() {
   try {
-    storage.saveRecord({ type: 'bmi', height, weight, bmi, band, ts: Date.now() });
-  } catch (e) { /* ignore storage errors */ }
-};
+    const raw = localStorage.getItem(HISTORY_KEY);
+    history = raw ? JSON.parse(raw) : [];
+  } catch {
+    history = [];
+  }
+}
 
-const handleBMRSubmit = (evt) => {
-  evt.preventDefault();
-  const { height, weight, age, sex } = readBMRForm();
-  const bmr = calculateBMR({ height, weight, age, sex });
-  renderBMR({ bmr });
-  renderHistory();
-
-  // optional: save BMR history
+function saveHistory() {
   try {
-    storage.saveRecord({ type: 'bmr', height, weight, age, sex, bmr, ts: Date.now() });
-  } catch (e) { /* ignore storage errors */ }
-};
-
-/* live / debounced preview for BMI inputs (optional, keeps debounce) */
-const handleBMILive = debounce(() => {
-  const { height, weight } = readBMIForm();
-  if (height && weight) {
-    const bmi = calculateBMI(height, weight);
-    const band = getRiskBand(bmi);
-    renderBMI({ bmi, band });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    /* ignore */
   }
-}, 300);
+}
 
-/* init */
-document.addEventListener('DOMContentLoaded', () => {
+function addHistory(entry) {
+  history.unshift(entry);
+  if (history.length > 10) history.length = 10;
+  saveHistory();
   renderHistory();
-  const bmiForm = document.getElementById('bmiForm');
-  const bmrForm = document.getElementById('bmrForm');
+}
 
-  if (bmiForm) {
-    bmiForm.addEventListener('submit', handleBMISubmit);
-    // live inputs
-    ['input', 'change'].forEach(e => {
-      bmiForm.addEventListener(e, handleBMILive);
-    });
+function renderHistory() {
+  if (!els.historyBody) return;
+
+  els.historyBody.innerHTML = '';
+
+  if (!history.length) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 6;
+    cell.className = 'history-empty';
+    cell.textContent = 'No calculations yet.';
+    row.appendChild(cell);
+    els.historyBody.appendChild(row);
+    return;
   }
 
-  if (bmrForm) {
-    bmrForm.addEventListener('submit', handleBMRSubmit);
-    // optional: simple live compute for BMR when all fields filled
-    const bmrLive = debounce(() => {
-      const { height, weight, age, sex } = readBMRForm();
-      if (height && weight && age && sex) {
-        const bmr = calculateBMR({ height, weight, age, sex });
-        renderBMR({ bmr });
-      }
-    }, 400);
-    ['input', 'change'].forEach(e => {
-      bmrForm.addEventListener(e, bmrLive);
-    });
-  }
-});
+  history.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.time}</td>
+      <td>${item.type}</td>
+      <td>${item.height}</td>
+      <td>${item.weight}</td>
+      <td>${item.bmi ?? '—'}</td>
+      <td>${item.bmr ?? '—'}</td>
+    `;
+    els.historyBody.appendChild(row);
+  });
+}
+
+loadHistory();
+renderHistory();

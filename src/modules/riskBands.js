@@ -1,17 +1,33 @@
 // src/modules/riskBands.js
-// Map BMI to a band class and short advice text
-
 export function getRiskBand(bmi) {
-  if (bmi === null) return null;
+  const value = Number(bmi);
+  if (!isFinite(value)) return null;
 
-  if (bmi < 18.5) {
-    return { className: 'band-warning', advice: 'Underweight — consider a balanced diet.' };
+  if (value < 18.5) {
+    return {
+      label: 'Underweight',
+      category: 'underweight',
+      advice: 'Below healthy range'
+    };
   }
-  if (bmi < 25) {
-    return { className: 'band-good', advice: 'Normal — keep up the good habits.' };
+  if (value < 25) {
+    return {
+      label: 'Normal',
+      category: 'normal',
+      advice: 'Healthy range'
+    };
   }
-  if (bmi < 30) {
-    return { className: 'band-warning', advice: 'Overweight — moderate diet and activity recommended.' };
+  if (value < 30) {
+    return {
+      label: 'Overweight',
+      category: 'overweight',
+      advice: 'Above healthy range'
+    };
   }
-  return { className: 'band-bad', advice: 'Obese — please consult a health professional.' };
+
+  return {
+    label: 'Obese',
+    category: 'obese',
+    advice: 'High health risk'
+  };
 }
