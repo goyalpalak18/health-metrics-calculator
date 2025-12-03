@@ -37,6 +37,36 @@ const isValid = v => typeof v === 'number' && v > 0 && Number.isFinite(v);
 const show = (el, on = true) => el && el.classList[on ? 'remove' : 'add']('hidden');
 const text = (el, t) => el && (el.textContent = t || '');
 
+// Reasonable input ranges (tweakable)
+const RANGES = {
+  height: { min: 30, max: 272 }, // cm — allow newborns up to tallest recorded humans
+  weight: { min: 1, max: 200 },  // kg — from tiny infants to extreme recorded weights
+  age: { min: 0, max: 120 }
+};
+
+function validateRanges({ height, weight, age } = {}) {
+  const errors = [];
+  if (height !== undefined) {
+    if (!isValid(height)) errors.push('Height must be a number.');
+    else if (height < RANGES.height.min || height > RANGES.height.max) {
+      errors.push(`Height should be between ${RANGES.height.min} cm and ${RANGES.height.max} cm.`);
+    }
+  }
+  if (weight !== undefined) {
+    if (!isValid(weight)) errors.push('Weight must be a number.');
+    else if (weight < RANGES.weight.min || weight > RANGES.weight.max) {
+      errors.push(`Weight should be between ${RANGES.weight.min} kg and ${RANGES.weight.max} kg.`);
+    }
+  }
+  if (age !== undefined) {
+    if (!isValid(age)) errors.push('Age must be a number.');
+    else if (age < RANGES.age.min || age > RANGES.age.max) {
+      errors.push(`Age should be between ${RANGES.age.min} and ${RANGES.age.max} years.`);
+    }
+  }
+  return errors;
+}
+
 if (els.bmiForm) els.bmiForm.addEventListener('submit', onBMISubmit);
 if (els.bmrForm) els.bmrForm.addEventListener('submit', onBMRSubmit);
 
@@ -46,8 +76,10 @@ function onBMISubmit(e) {
   const h = num(els.bmiHeight);
   const w = num(els.bmiWeight);
 
-  if (!isValid(h) || !isValid(w)) {
-    showError(els.bmiError, 'Please enter valid height and weight (greater than 0).');
+  // Basic validations + reasonable ranges
+  const rangeErrors = validateRanges({ height: h, weight: w });
+  if (rangeErrors.length) {
+    showError(els.bmiError, rangeErrors.join(' '));
     show(els.bmiOutput, false);
     show(els.bmiResults, true);
     return;
@@ -87,8 +119,13 @@ function onBMRSubmit(e) {
   const age = num(els.bmrAge);
   const gender = (els.bmrGender.value || '').toLowerCase();
 
-  if (!isValid(h) || !isValid(w) || !isValid(age) || !gender) {
-    showError(els.bmrError, 'Please enter valid values for all fields.');
+  // Basic validations + reasonable ranges
+  const missing = [];
+  if (!gender) missing.push('gender');
+  const rangeErrors = validateRanges({ height: h, weight: w, age });
+  if (missing.length) rangeErrors.unshift(`Please select a ${missing.join(', ')}.`);
+  if (rangeErrors.length) {
+    showError(els.bmrError, rangeErrors.join(' '));
     show(els.bmrOutput, false);
     show(els.bmrResults, true);
     return;
