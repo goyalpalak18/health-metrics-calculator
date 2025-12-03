@@ -1,130 +1,176 @@
-<!-- ...existing code... -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Metrics</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Metrics Calculator</title>
 
-    <!-- Added Inter font (referenced in CSS) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-
-    <!-- SKIP LINK for keyboard users (accessibility) -->
     <a href="#main" class="skip-link">Skip to main content</a>
 
-    <!-- ---------------- HEADER SECTION ---------------- -->
-    <header class="site-header" role="banner">
-        <div class="container header-inner">
-
-            <!-- Logo linked to home (important for accessibility) -->
-            <a href="/" class="logo" aria-label="Health Metrics Home">Health Metrics</a>
-
-            <!-- Main Navigation -->
-            <nav class="nav" aria-label="Main Navigation">
+    <header class="site-header">
+        <div class="container site-header-inner">
+            <h1 class="logo">Health&nbsp;Metrics</h1>
+            <nav aria-label="Main navigation">
                 <ul class="nav-list">
-                    <li><a href="#about" tabindex="0">About</a></li>
-                    <li><a href="#contact" tabindex="0">Contact</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
-
         </div>
     </header>
 
-    <!-- ---------------- MAIN CONTENT WRAPPER ---------------- -->
-    <main class="container main" id="main" role="main" tabindex="-1">
-
-        <!-- HERO SECTION (landing intro) -->
-        <section class="hero card" aria-labelledby="hero-title">
-            <h1 id="hero-title">Track your health instantly</h1>
-            <p class="lead">Calculate BMI, BMR and see health risk bands – simple and fast.</p>
-            <a href="#bmi-calculator" class="btn primary" role="button">Start now</a>
-        </section>
-
-        <!-- ---------------- BMI CALCULATOR SECTION ---------------- -->
-        <section id="bmi-calculator" class="calculator container card" aria-labelledby="bmi-title">
-            <h2 id="bmi-title">BMI Calculator</h2>
-            <form id="bmiForm" aria-describedby="bmi-desc">
-                <p id="bmi-desc" class="visually-hidden">Enter height and weight to calculate BMI and risk band.</p>
-
-                <div class="form-group">
-                    <label for="bmi-height">Height (cm)</label>
-                    <input type="number" id="bmi-height" required inputmode="decimal" min="30" max="300" step="0.1"
-                        aria-required="true">
-                </div>
-
-                <div class="form-group">
-                    <label for="bmi-weight">Weight (kg)</label>
-                    <input type="number" id="bmi-weight" required inputmode="decimal" min="10" max="500" step="0.1"
-                        aria-required="true">
-                </div>
-
-                <button type="submit" class="btn primary">Calculate BMI</button>
-            </form>
-
-            <div id="bmi-results" class="results hidden" aria-live="polite" aria-atomic="true">
-                <h3>Your BMI Result</h3>
-                <p><strong>BMI:</strong> <span id="bmiValue" aria-live="polite"></span></p>
-                <p><strong>Risk Band:</strong> <span id="bmiRisk" aria-live="polite"></span></p>
+    <main class="container" id="main">
+        <section class="hero">
+            <h2>Track your health in seconds</h2>
+            <p>Calculate your BMI and BMR with clean, instant feedback and color-coded risk bands.</p>
+            <div class="hero-cta">
+                <button class="btn btn-primary" type="button"
+                    onclick="document.getElementById('bmi-section').scrollIntoView({behavior:'smooth'})">
+                    Start with BMI
+                </button>
             </div>
         </section>
 
-        <!-- ---------------- BMR CALCULATOR SECTION ---------------- -->
-        <section id="bmr-calculator" class="calculator container card" aria-labelledby="bmr-title">
-            <h2 id="bmr-title">BMR Calculator</h2>
-            <form id="bmrForm" aria-describedby="bmr-desc">
-                <p id="bmr-desc" class="visually-hidden">Enter height, weight, age and gender to calculate BMR.</p>
+        <section class="calculators" aria-label="Health calculators">
+            <article class="calculator-card" id="bmi-section">
+                <h3>📊 BMI Calculator</h3>
+                <p class="subtitle">Body Mass Index based on your height and weight.</p>
 
-                <div class="form-group">
-                    <label for="bmr-height">Height (cm)</label>
-                    <input type="number" id="bmr-height" required inputmode="decimal" min="30" max="300" step="0.1"
-                        aria-required="true">
+                <form id="bmiForm" novalidate>
+                    <div class="form-group">
+                        <label for="bmi-height">Height (cm)</label>
+                        <input type="number" id="bmi-height" placeholder="170" min="1" step="0.1" required
+                            inputmode="decimal" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bmi-weight">Weight (kg)</label>
+                        <input type="number" id="bmi-weight" placeholder="70" min="1" step="0.1" required
+                            inputmode="decimal" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Calculate BMI</button>
+                </form>
+
+                <div id="bmi-results" class="results hidden">
+                    <div id="bmi-error" class="error hidden"></div>
+
+                    <div id="bmi-output" class="hidden">
+                        <div class="result-value">
+                            <span class="label">Your BMI</span>
+                            <span id="bmiValue" class="value">—</span>
+                        </div>
+
+                        <div id="bmi-risk-band" class="risk-band"></div>
+
+                        <div class="chart-wrapper">
+                            <canvas id="bmiChart" aria-label="BMI risk band chart" role="img"></canvas>
+                        </div>
+                    </div>
                 </div>
+            </article>
 
-                <div class="form-group">
-                    <label for="bmr-weight">Weight (kg)</label>
-                    <input type="number" id="bmr-weight" required inputmode="decimal" min="10" max="500" step="0.1"
-                        aria-required="true">
+            <article class="calculator-card" id="bmr-section">
+                <h3>🔥 BMR Calculator</h3>
+                <p class="subtitle">Basal Metabolic Rate based on height, weight, age and gender.</p>
+
+                <form id="bmrForm" novalidate>
+                    <div class="form-group">
+                        <label for="bmr-height">Height (cm)</label>
+                        <input type="number" id="bmr-height" placeholder="170" min="1" step="0.1" required
+                            inputmode="decimal" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bmr-weight">Weight (kg)</label>
+                        <input type="number" id="bmr-weight" placeholder="70" min="1" step="0.1" required
+                            inputmode="decimal" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bmr-age">Age (years)</label>
+                        <input type="number" id="bmr-age" placeholder="30" min="1" max="120" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bmr-gender">Gender</label>
+                        <select id="bmr-gender" required>
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Calculate BMR</button>
+                </form>
+
+                <div id="bmr-results" class="results hidden">
+                    <div id="bmr-error" class="error hidden"></div>
+
+                    <div id="bmr-output" class="hidden">
+                        <div class="result-value">
+                            <span class="label">Your BMR</span>
+                            <span id="bmrValue" class="value">—</span>
+                        </div>
+                        <p class="bmr-info">Approximate calories your body needs at rest per day.</p>
+                    </div>
                 </div>
+            </article>
+        </section>
 
-                <div class="form-group">
-                    <label for="bmr-age">Age</label>
-                    <input type="number" id="bmr-age" required min="0" max="120" aria-required="true">
-                </div>
-
-                <div class="form-group">
-                    <label for="bmr-gender">Gender</label>
-                    <select id="bmr-gender" required aria-required="true">
-                        <option value="">Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn primary">Calculate BMR</button>
-            </form>
-
-            <div id="bmr-results" class="results hidden" aria-live="polite" aria-atomic="true">
-                <h3>Your BMR Result</h3>
-                <p><strong>BMR:</strong> <span id="bmrValue" aria-live="polite"></span></p>
+        <!-- HISTORY TABLE -->
+        <section class="calculator-card" id="history-section" aria-label="Calculation history">
+            <h3>History</h3>
+            <p class="subtitle">Last 10 calculations stored on this device.</p>
+            <div class="history-wrapper">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>Height (cm)</th>
+                            <th>Weight (kg)</th>
+                            <th>BMI</th>
+                            <th>BMR</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr>
+                            <td colspan="6" class="history-empty">No calculations yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section id="history" class="history card container">
-            <h2>Previous Calculations</h2>
-            <ul id="history-list"></ul>
+        <section class="calculator-card" id="about">
+            <h3>About</h3>
+            <p class="subtitle">
+                This project is a Health Metrics Calculator built with HTML, CSS and vanilla JavaScript as part of OJT
+                product
+                development. It focuses on accessibility, responsive design and clear visual feedback.
+            </p>
         </section>
 
+        <section class="calculator-card" id="contact">
+            <h3>Contact</h3>
+            <p class="subtitle">
+                For queries about this project, please contact the development team.
+            </p>
+        </section>
     </main>
 
-    <!-- Main app logic -->
-    <script type="module" src="./app.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Your app logic -->
+    <script type="module" src="./app.js"></script>
 </body>
 
 </html>
