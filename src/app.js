@@ -3,89 +3,129 @@ import { calculateBMI } from './modules/bmi.js';
 import { calculateBMR } from './modules/bmr.js';
 import { getRiskBand } from './modules/riskBands.js';
 
-const $ = id => document.getElementById(id);
+const byId = (id) => document.getElementById(id);
 
 const els = {
-  bmiForm: $('bmiForm'),
-  bmrForm: $('bmrForm'),
+  bmiForm: byId('bmiForm'),
+  bmrForm: byId('bmrForm'),
 
-  bmiHeight: $('bmi-height'),
-  bmiWeight: $('bmi-weight'),
-  bmiResults: $('bmi-results'),
-  bmiError: $('bmi-error'),
-  bmiOutput: $('bmi-output'),
-  bmiValue: $('bmiValue'),
-  bmiRisk: $('bmi-risk-band'),
+  bmiHeight: byId('bmi-height'),
+  bmiWeight: byId('bmi-weight'),
+  bmiResults: byId('bmi-results'),
+  bmiError: byId('bmi-error'),
+  bmiOutput: byId('bmi-output'),
+  bmiValue: byId('bmiValue'),
+  bmiRisk: byId('bmi-risk-band'),
 
-  bmrHeight: $('bmr-height'),
-  bmrWeight: $('bmr-weight'),
-  bmrAge: $('bmr-age'),
-  bmrGender: $('bmr-gender'),
-  bmrResults: $('bmr-results'),
-  bmrError: $('bmr-error'),
-  bmrOutput: $('bmr-output'),
-  bmrValue: $('bmrValue'),
+  bmrHeight: byId('bmr-height'),
+  bmrWeight: byId('bmr-weight'),
+  bmrAge: byId('bmr-age'),
+  bmrGender: byId('bmr-gender'),
+  bmrResults: byId('bmr-results'),
+  bmrError: byId('bmr-error'),
+  bmrOutput: byId('bmr-output'),
+  bmrValue: byId('bmrValue'),
 
-  historyBody: $('history-body')
+  historyBody: byId('history-body')
 };
 
 const HISTORY_KEY = 'health-metrics-history';
 let history = [];
 
-const num = el => parseFloat(el.value);
-const isValid = v => typeof v === 'number' && v > 0 && Number.isFinite(v);
-const show = (el, on = true) => el && el.classList[on ? 'remove' : 'add']('hidden');
-const text = (el, t) => el && (el.textContent = t || '');
+// helpers
+const num = (el) => parseFloat(el.value);
 
-// Reasonable input ranges (tweakable)
+const isValidNumber = (v) =>
+  typeof v === 'number' && !Number.isNaN(v) && Number.isFinite(v);
+
+function show(el, on = true) {
+  if (!el) return;
+
+  if (on) {
+    el.classList.remove('hidden');   // show element
+  } else {
+    el.classList.add('hidden');      // hide element
+  }
+}
+
+function text(el, t = '') {
+  if (!el) return;
+  el.textContent = t;
+}
+
+// Allowed input ranges
 const RANGES = {
-  height: { min: 30, max: 272 }, // cm — allow newborns up to tallest recorded humans
-  weight: { min: 1, max: 200 },  // kg — from tiny infants to extreme recorded weights
-  age: { min: 0, max: 120 }
+  heightMin: 30,
+  heightMax: 272,
+  weightMin: 1,
+  weightMax: 200,
+  ageMin: 0,
+  ageMax: 120
 };
 
-function validateRanges({ height, weight, age } = {}) {
+function validateRanges(height, weight, age) {
   const errors = [];
-  if (height !== undefined) {
-    if (!isValid(height)) errors.push('Height must be a number.');
-    else if (height < RANGES.height.min || height > RANGES.height.max) {
-      errors.push(`Height should be between ${RANGES.height.min} cm and ${RANGES.height.max} cm.`);
+
+  if (height !== undefined && height !== null) {
+    if (!isValidNumber(height)) {
+      errors.push('Height must be a number.');
+    } else if (height < RANGES.heightMin || height > RANGES.heightMax) {
+      errors.push(
+        `Height should be between ${RANGES.heightMin} cm and ${RANGES.heightMax} cm.`
+      );
     }
   }
-  if (weight !== undefined) {
-    if (!isValid(weight)) errors.push('Weight must be a number.');
-    else if (weight < RANGES.weight.min || weight > RANGES.weight.max) {
-      errors.push(`Weight should be between ${RANGES.weight.min} kg and ${RANGES.weight.max} kg.`);
+
+  if (weight !== undefined && weight !== null) {
+    if (!isValidNumber(weight)) {
+      errors.push('Weight must be a number.');
+    } else if (weight < RANGES.weightMin || weight > RANGES.weightMax) {
+      errors.push(
+        `Weight should be between ${RANGES.weightMin} kg and ${RANGES.weightMax} kg.`
+      );
     }
   }
-  if (age !== undefined) {
-    if (!isValid(age)) errors.push('Age must be a number.');
-    else if (age < RANGES.age.min || age > RANGES.age.max) {
-      errors.push(`Age should be between ${RANGES.age.min} and ${RANGES.age.max} years.`);
+
+  if (age !== undefined && age !== null) {
+    if (!isValidNumber(age)) {
+      errors.push('Age must be a number.');
+    } else if (age < RANGES.ageMin || age > RANGES.ageMax) {
+      errors.push(
+        `Age should be between ${RANGES.ageMin} and ${RANGES.ageMax} years.`
+      );
     }
   }
+
   return errors;
 }
 
-if (els.bmiForm) els.bmiForm.addEventListener('submit', onBMISubmit);
-if (els.bmrForm) els.bmrForm.addEventListener('submit', onBMRSubmit);
+// wire events
+if (els.bmiForm) {
+  els.bmiForm.addEventListener('submit', onBMISubmit);
+}
 
-function onBMISubmit(e) {
-  e.preventDefault();
+if (els.bmrForm) {
+  els.bmrForm.addEventListener('submit', onBMRSubmit);
+}
+
+// BMI handler
+function onBMISubmit(event) {
+  event.preventDefault();
 
   const h = num(els.bmiHeight);
   const w = num(els.bmiWeight);
 
-  // Basic validations + reasonable ranges
-  const rangeErrors = validateRanges({ height: h, weight: w });
-  if (rangeErrors.length) {
-    showError(els.bmiError, rangeErrors.join(' '));
+  const errors = validateRanges(h, w, undefined);
+
+  if (errors.length > 0) {
+    showError(els.bmiError, errors.join(' '));
     show(els.bmiOutput, false);
     show(els.bmiResults, true);
     return;
   }
 
   const bmi = calculateBMI(h, w);
+
   if (!Number.isFinite(bmi)) {
     showError(els.bmiError, 'Unable to calculate BMI. Please check your values.');
     show(els.bmiOutput, false);
@@ -95,7 +135,7 @@ function onBMISubmit(e) {
 
   text(els.bmiValue, bmi.toFixed(1));
   updateRiskBand(getRiskBand(bmi));
-  drawBMIChart(bmi); // draw the small colored BMI band
+  drawBMIChart(bmi);
 
   show(els.bmiError, false);
   show(els.bmiOutput, true);
@@ -111,27 +151,30 @@ function onBMISubmit(e) {
   });
 }
 
-function onBMRSubmit(e) {
-  e.preventDefault();
+// BMR handler
+function onBMRSubmit(event) {
+  event.preventDefault();
 
   const h = num(els.bmrHeight);
   const w = num(els.bmrWeight);
   const age = num(els.bmrAge);
   const gender = (els.bmrGender.value || '').toLowerCase();
 
-  // Basic validations + reasonable ranges
-  const missing = [];
-  if (!gender) missing.push('gender');
-  const rangeErrors = validateRanges({ height: h, weight: w, age });
-  if (missing.length) rangeErrors.unshift(`Please select a ${missing.join(', ')}.`);
-  if (rangeErrors.length) {
-    showError(els.bmrError, rangeErrors.join(' '));
+  const errors = validateRanges(h, w, age);
+
+  if (!gender) {
+    errors.unshift('Please select a gender.');
+  }
+
+  if (errors.length > 0) {
+    showError(els.bmrError, errors.join(' '));
     show(els.bmrOutput, false);
     show(els.bmrResults, true);
     return;
   }
 
   const bmr = calculateBMR(h, w, age, gender);
+
   if (!Number.isFinite(bmr)) {
     showError(els.bmrError, 'Unable to calculate BMR. Please check your values.');
     show(els.bmrOutput, false);
@@ -155,6 +198,7 @@ function onBMRSubmit(e) {
   });
 }
 
+// error + risk band
 function showError(el, msg) {
   if (!el) return;
   text(el, msg);
@@ -163,13 +207,19 @@ function showError(el, msg) {
 
 function updateRiskBand(band) {
   if (!els.bmiRisk || !band) return;
+
   els.bmiRisk.className = 'risk-band';
-  if (band.category) els.bmiRisk.classList.add(band.category);
+
+  if (band.category) {
+    els.bmiRisk.classList.add(band.category);
+  }
+
   text(els.bmiRisk, `${band.label} – ${band.advice}`);
 }
 
+// canvas chart
 function drawBMIChart(bmi) {
-  const canvas = document.getElementById('bmiChart');
+  const canvas = byId('bmiChart');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
@@ -179,23 +229,24 @@ function drawBMIChart(bmi) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const segments = [
-    { max: 18.5, color: '#60a5fa' },
-    { max: 24.9, color: '#34d399' },
-    { max: 29.9, color: '#fbbf24' },
-    { max: 40,   color: '#f87171' }
+    { color: '#60a5fa' }, // underweight
+    { color: '#34d399' }, // normal
+    { color: '#fbbf24' }, // overweight
+    { color: '#f87171' }  // obese
   ];
 
   let x = 0;
-  const segWidth = canvas.width / 4;
+  const segWidth = canvas.width / segments.length;
 
-  segments.forEach(seg => {
+  segments.forEach((seg) => {
     ctx.fillStyle = seg.color;
     ctx.fillRect(x, 0, segWidth, 40);
     x += segWidth;
   });
 
   if (bmi > 0) {
-    const markerX = Math.min((bmi / 40) * canvas.width, canvas.width - 2);
+    const maxBMI = 40; // cap chart at BMI 40
+    const markerX = Math.min((bmi / maxBMI) * canvas.width, canvas.width - 2);
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(markerX, 0, 3, 40);
   }
@@ -211,7 +262,7 @@ function loadHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     history = raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (error) {
     history = [];
   }
 }
@@ -219,14 +270,18 @@ function loadHistory() {
 function saveHistory() {
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    /* ignore */
+  } catch (error) {
+    // ignore storage errors
   }
 }
 
 function addHistory(entry) {
   history.unshift(entry);
-  if (history.length > 10) history.length = 10;
+
+  if (history.length > 10) {
+    history.length = 10;
+  }
+
   saveHistory();
   renderHistory();
 }
@@ -247,7 +302,7 @@ function renderHistory() {
     return;
   }
 
-  history.forEach(item => {
+  history.forEach((item) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${item.time}</td>

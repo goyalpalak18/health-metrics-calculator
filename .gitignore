@@ -1,14 +1,18 @@
 # macOS
 .DS_Store
 
-# node (if you use tools later)
+# Node modules (if used later)
 node_modules/
+
+# Build folders (future use)
 dist/
 build/
 
-# environment
+# Local environment files
 .env
 
-# editor settings
+# Editor folders
 .vscode/
+
+# Logs
 *.log
