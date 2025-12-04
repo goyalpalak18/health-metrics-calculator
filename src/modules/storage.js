@@ -1,39 +1,24 @@
-// src/modules/storage.js
-// simple localStorage history (max 10)
+// storage helper
+const KEY = 'health-history';
+const LIMIT = 10;
 
-const KEY = 'hm_calc_history_v1';
-const MAX = 10;
+export const getHistory = () =>
+  JSON.parse(localStorage.getItem(KEY) || '[]');
+
+export const saveHistory = list =>
+  localStorage.setItem(KEY, JSON.stringify(list));
 
 export function saveEntry(entry) {
-  try {
-    const raw = localStorage.getItem(KEY);
-    const list = raw ? JSON.parse(raw) : [];
-    list.unshift(entry); // newest first
-    if (list.length > MAX) list.splice(MAX);
-    localStorage.setItem(KEY, JSON.stringify(list));
-    return list;
-  } catch (e) {
-    console.warn('storage save error', e);
-    return null;
-  }
-}
-
-export function getHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]');
-  } catch (e) {
-    return [];
-  }
+  const list = getHistory();
+  list.unshift(entry);
+  if (list.length > LIMIT) list.length = LIMIT;
+  saveHistory(list);
+  return list;
 }
 
 export function undoLast() {
-  try {
-    const list = getHistory();
-    if (!list.length) return null;
-    list.shift(); // remove most recent
-    localStorage.setItem(KEY, JSON.stringify(list));
-    return list;
-  } catch (e) {
-    return null;
-  }
+  const list = getHistory();
+  list.shift();
+  saveHistory(list);
+  return list;
 }
