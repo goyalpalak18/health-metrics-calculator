@@ -1,7 +1,7 @@
 // src/app.js
-import { calculateBMI } from './modules/bmi.js';
-import { calculateBMR } from './modules/bmr.js';
-import { getRiskBand } from './modules/riskBands.js';
+import { calculateBMI } from './src/modules/bmi.js';
+import { calculateBMR } from './src/modules/bmr.js';
+import { getRiskBand } from './src/modules/riskBands.js';
 
 const byId = (id) => document.getElementById(id);
 
