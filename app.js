@@ -223,32 +223,39 @@ function drawBMIChart(bmi) {
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
+  const maxBMI = 40;          // maximum BMI value for the chart
   canvas.width = 300;
   canvas.height = 40;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const segments = [
-    { color: '#60a5fa' }, // underweight
-    { color: '#34d399' }, // normal
-    { color: '#fbbf24' }, // overweight
-    { color: '#f87171' }  // obese
+  // REAL BMI RANGES (not equal segments)
+  const ranges = [
+    { label: 'Underweight', max: 18.5, color: '#60a5fa' }, // blue
+    { label: 'Normal', max: 24.9, color: '#34d399' }, // green
+    { label: 'Overweight', max: 29.9, color: '#fbbf24' }, // yellow
+    { label: 'Obese', max: 40, color: '#f87171' }  // red
   ];
 
-  let x = 0;
-  const segWidth = canvas.width / segments.length;
+  let startX = 0;
 
-  segments.forEach((seg) => {
-    ctx.fillStyle = seg.color;
-    ctx.fillRect(x, 0, segWidth, 40);
-    x += segWidth;
+  ranges.forEach((range) => {
+    const endX = (range.max / maxBMI) * canvas.width;
+    const width = endX - startX;
+
+    ctx.fillStyle = range.color;
+    ctx.fillRect(startX, 0, width, canvas.height);
+
+    startX = endX;
   });
 
+  // marker at the correct place in the bar
   if (bmi > 0) {
-    const maxBMI = 40; // cap chart at BMI 40
-    const markerX = Math.min((bmi / maxBMI) * canvas.width, canvas.width - 2);
+    const clampedBMI = Math.min(bmi, maxBMI);
+    const markerX = (clampedBMI / maxBMI) * canvas.width;
+
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(markerX, 0, 3, 40);
+    ctx.fillRect(markerX - 1.5, 0, 3, canvas.height);
   }
 }
 
